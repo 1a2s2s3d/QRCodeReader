@@ -17,7 +17,7 @@ class ResultActivity : AppCompatActivity() {
 
         val result = intent.getStringExtra("msg") ?: "데이터가 존재하지 않습니다." // ❷
 
-        setUI(result)// UI를 초기화합니다.
+        setUI(result)// UI를 초기화합니다..
     }
 
     private fun setUI(result:String){
