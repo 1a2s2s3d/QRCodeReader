@@ -8,11 +8,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Toast
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import com.example.qrcodereader.databinding.ActivityMainBinding
 import com.google.common.util.concurrent.ListenableFuture
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,6 +24,13 @@ class MainActivity : AppCompatActivity() {
 
     private val PERMISSIONS_REQUEST_CODE = 1
     private val PERMISSIONS_REQUIRED = arrayOf(android.Manifest.permission.CAMERA)
+
+    private var isDetected = false
+
+    override fun onResume() {
+        super.onResume()
+        isDetected = false
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,10 +71,11 @@ class MainActivity : AppCompatActivity() {
         cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener(Runnable{
             val cameraProvider = cameraProviderFuture.get()
+            val imageAnalysis = getImageAnalysis()
             val preview = getPreview()
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
 
-            cameraProvider.bindToLifecycle(this, cameraSelector,preview)
+            cameraProvider.bindToLifecycle(this, cameraSelector,preview, imageAnalysis)
         }, ContextCompat.getMainExecutor(this))
     }
     fun getPreview() : Preview{
@@ -72,5 +83,26 @@ class MainActivity : AppCompatActivity() {
         preview.setSurfaceProvider(binding.barcodePreview.getSurfaceProvider())
 
         return preview
+    }
+
+    fun getImageAnalysis(): ImageAnalysis {
+
+        val cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+        val imageAnalysis = ImageAnalysis.Builder().build()
+
+        imageAnalysis.setAnalyzer(cameraExecutor,
+            QRCodeAnalyzer(object : OnDetectListener {
+                override fun onDetect(msg: String) {
+                    if(!isDetected){
+                        isDetected = true
+
+                        val intent = Intent(this@MainActivity,
+                        ResultActivity::class.java)
+                        intent.putExtra("msg", msg)
+                        startActivity(intent)
+                    }
+                }
+            }))
+        return imageAnalysis
     }
 }

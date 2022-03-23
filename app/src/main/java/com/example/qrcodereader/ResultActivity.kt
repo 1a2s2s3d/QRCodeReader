@@ -1,11 +1,29 @@
 package com.example.qrcodereader
 
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
+import com.example.qrcodereader.databinding.ActivityResultBinding
 
 class ResultActivity : AppCompatActivity() {
+
+    lateinit var binding: ActivityResultBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_result)
+
+        binding = ActivityResultBinding.inflate(layoutInflater)
+        val view = binding.root
+        setContentView(view)
+
+        val result = intent.getStringExtra("msg") ?: "데이터가 존재하지 않습니다." // ❷
+
+        setUI(result)// UI를 초기화합니다.
+    }
+
+    private fun setUI(result:String){
+        binding.tvContent.text = result  // 넘어온 QR코드 속 데이터를 텍스트 뷰에 설정함
+        binding.btnGoBack.setOnClickListener{
+            finish()   //돌아가기 버튼을 눌렀을때 ResultActivity를 종료함
+        }
     }
 }
